@@ -1,395 +1,225 @@
-// ═══════════════════════════════════════
-//  UniVent — Frontend Application
-// ═══════════════════════════════════════
+const feedData = [
+  {
+    stamp: 'APR 01',
+    index: '01',
+    title: 'boot sequence established',
+    summary: 'The repo opens with a Flask shell, a single rendered surface, and enough structure to ship a fast MVP without fighting the framework.',
+    chips: ['flask', 'templates', 'api surface'],
+    raw: [
+      'app.py: Flask entrypoint + json endpoints',
+      'templates/index.html: main shell',
+      'static/style.css: visual system',
+    ],
+  },
+  {
+    stamp: 'APR 03',
+    index: '02',
+    title: 'operator theme locked in',
+    summary: 'Monospace typography, hard edges, grid lines, and a deliberate amount of negative space turn the landing page into a terminal-adjacent control panel.',
+    chips: ['mono type', 'high contrast', 'scanline'],
+    raw: [
+      'font stack: IBM Plex Mono + Inter',
+      'overlay: grid + noise + scanline',
+      'surface: dark glass panels',
+    ],
+  },
+  {
+    stamp: 'APR 06',
+    index: '03',
+    title: 'chronological feed introduced',
+    summary: 'Instead of a generic list, the content is framed as a mission log so the page reads like progress rather than inventory.',
+    chips: ['feed', 'timeline', 'status'],
+    raw: [
+      'hero supports APRIL 2026 story framing',
+      'cards reveal raw metadata on hover',
+      'motion uses staggered entry',
+    ],
+  },
+  {
+    stamp: 'APR 09',
+    index: '04',
+    title: 'stack and telemetry panels',
+    summary: 'A side channel makes the repo feel inspectable: the stack is visible at a glance, while live repository stats keep the design grounded in actual project data.',
+    chips: ['github api', 'live stats', 'telemetry'],
+    raw: [
+      'fetches stars, forks, issues, language',
+      'keeps repo state visible',
+      'direct github CTA stays on canvas',
+    ],
+  },
+  {
+    stamp: 'APR 12',
+    index: '05',
+    title: 'hover reveal channel opened',
+    summary: 'Every card exposes the underlying raw data when you hover it, so the UI reads polished on first pass and technical on second pass.',
+    chips: ['hover', 'raw data', 'inspection'],
+    raw: [
+      'feed cards include hidden source detail',
+      'raw console mirrors hovered item',
+      'motion stays subtle and reversible',
+    ],
+  },
+  {
+    stamp: 'APR 18',
+    index: '06',
+    title: 'deploy lane pointed at vercel',
+    summary: 'The last step is a clean delivery path: push the design branch, let Vercel build it, and hand back a live URL without ceremony.',
+    chips: ['design-v1', 'vercel', 'ship'],
+    raw: [
+      'target branch: design-v1',
+      'production host: vercel',
+      'cta routes to github repo',
+    ],
+  },
+];
 
-let allEvents = [];
-let chatOpen = false;
-let currentUser = null;
+const stackData = [
+  ['backend', 'flask api + jinja shell'],
+  ['frontend', 'vanilla js renderer'],
+  ['visual layer', 'css grid, glass, noise'],
+  ['motion', 'character stagger + scroll react'],
+  ['delivery', 'github branch + vercel deploy'],
+];
 
-// ── Init ──
-document.addEventListener('DOMContentLoaded', () => {
-    loadUser();
-    loadEvents();
-    setupCardHoverTracking();
-});
+async function loadRepoStats() {
+  try {
+    const response = await fetch('https://api.github.com/repos/mollyvita/bootcamp');
+    if (!response.ok) throw new Error(`github api ${response.status}`);
+    const repo = await response.json();
 
-async function loadUser() {
-    try {
-        const res = await fetch('/api/user');
-        currentUser = await res.json();
-    } catch (e) {
-        console.error('Failed to load user:', e);
-    }
+    setRepoValue('language', repo.language || 'n/a');
+    setRepoValue('stars', formatNumber(repo.stargazers_count));
+    setRepoValue('forks', formatNumber(repo.forks_count));
+    setRepoValue('issues', formatNumber(repo.open_issues_count));
+  } catch (error) {
+    setRepoValue('language', 'css');
+    setRepoValue('stars', '0');
+    setRepoValue('forks', '0');
+    setRepoValue('issues', '0');
+  }
 }
 
-// ═══════════════════════════════
-//  EVENTS
-// ═══════════════════════════════
-
-async function loadEvents() {
-    const university = document.getElementById('filter-university').value;
-    const type = document.getElementById('filter-type').value;
-    const audience = document.getElementById('filter-audience').value;
-
-    const params = new URLSearchParams();
-    if (university) params.set('university', university);
-    if (type) params.set('type', type);
-    if (audience) params.set('audience', audience);
-
-    try {
-        const res = await fetch(`/api/events?${params}`);
-        const events = await res.json();
-        allEvents = events;
-        renderEvents(events, 'events-grid');
-
-        document.getElementById('filter-count').textContent = `Показано: ${events.length}`;
-        document.getElementById('empty-state').style.display = events.length === 0 ? 'block' : 'none';
-        document.getElementById('events-grid').style.display = events.length === 0 ? 'none' : 'grid';
-    } catch (err) {
-        console.error('Failed to load events:', err);
-    }
+function setRepoValue(key, value) {
+  const target = document.querySelector(`[data-repo="${key}"]`);
+  if (target) target.textContent = value;
 }
 
-function renderEvents(events, containerId) {
-    const grid = document.getElementById(containerId);
-    grid.innerHTML = '';
+function formatNumber(value) {
+  return new Intl.NumberFormat('en-US').format(value ?? 0);
+}
 
-    events.forEach((event, i) => {
-        const card = document.createElement('div');
-        card.className = `event-card${event.registered ? ' registered' : ''}`;
-        card.style.setProperty('--card-accent', event.color);
-        card.style.animationDelay = `${i * 0.06}s`;
-        card.onclick = () => openModal(event);
+function splitHeroTitle() {
+  const title = document.querySelector('[data-split]');
+  if (!title) return;
 
-        card.innerHTML = `
-            <div class="card-top">
-                <span class="card-emoji">${event.emoji}</span>
-                <div class="card-badges">
-                    <span class="card-badge card-badge--uni" style="color:${event.color}">${event.university}</span>
-                    ${event.registered ? '<span class="card-badge card-badge--registered">✓ Записан</span>' : `<span class="card-badge card-badge--type">${event.type_label}</span>`}
-                </div>
-            </div>
-            <h3 class="card-title">${event.title}</h3>
-            <div class="card-uni-name">${getFullUniName(event.university)}</div>
-            <div class="card-meta">
-                <div class="card-meta-item">
-                    <span class="meta-icon">📅</span>
-                    ${event.date}
-                </div>
-                <div class="card-meta-item">
-                    <span class="meta-icon">🕐</span>
-                    ${event.time}
-                </div>
-            </div>
-            <div class="card-footer">
-                <span class="card-audience">${event.audience_label}</span>
-                ${event.registered
-                    ? '<span class="card-action card-action--registered">Записан ✓</span>'
-                    : '<span class="card-action">Подробнее →</span>'}
-            </div>
-        `;
+  const text = title.textContent.trim();
+  title.textContent = '';
 
-        grid.appendChild(card);
+  [...text].forEach((char, index) => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.style.setProperty('--i', index);
+    span.innerHTML = char === ' ' ? '&nbsp;' : char;
+    title.appendChild(span);
+  });
+}
+
+function renderFeed() {
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+
+  list.innerHTML = feedData.map((item, index) => `
+    <article class="feed-card" data-feed-card="${index}">
+      <div class="feed-top">
+        <span class="feed-index">${item.index}</span>
+        <span>${item.stamp}</span>
+      </div>
+      <h3 class="feed-title">${item.title}</h3>
+      <p class="feed-summary">${item.summary}</p>
+      <div class="feed-meta">
+        ${item.chips.map((chip) => `<span class="chip">${chip}</span>`).join('')}
+      </div>
+      <div class="feed-raw">${item.raw.map((line) => `• ${line}`).join('<br>')}</div>
+    </article>
+  `).join('');
+
+  const feedCount = document.querySelector('[data-metric="feed-count"]');
+  if (feedCount) feedCount.textContent = String(feedData.length).padStart(2, '0');
+
+  const cards = list.querySelectorAll('.feed-card');
+  const consoleBox = document.getElementById('raw-console');
+
+  cards.forEach((card, index) => {
+    const item = feedData[index];
+    card.addEventListener('mouseenter', () => {
+      cards.forEach((el) => el.classList.remove('active'));
+      card.classList.add('active');
+      if (consoleBox) {
+        consoleBox.textContent = [
+          `slot: ${item.index}`,
+          `stamp: ${item.stamp}`,
+          `title: ${item.title}`,
+          '',
+          ...item.raw,
+        ].join('\n');
+      }
     });
-}
 
-function getFullUniName(short) {
-    const map = {
-        'МГУ': 'Московский государственный университет',
-        'МФТИ': 'Московский физико-технический институт',
-        'ВШЭ': 'Высшая школа экономики',
-        'МГТУ': 'МГТУ им. Н.Э. Баумана',
-        'ИТМО': 'Университет ИТМО',
-    };
-    return map[short] || short;
-}
-
-// ── Card hover light tracking ──
-function setupCardHoverTracking() {
-    document.addEventListener('mousemove', (e) => {
-        const cards = document.querySelectorAll('.event-card');
-        cards.forEach(card => {
-            const rect = card.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            card.style.setProperty('--mouse-x', x + '%');
-            card.style.setProperty('--mouse-y', y + '%');
-        });
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('active');
     });
+  });
+
+  if (consoleBox) {
+    consoleBox.textContent = 'hover a feed item to inspect the underlying data';
+  }
 }
 
-// ═══════════════════════════════
-//  TABS
-// ═══════════════════════════════
+function renderStack() {
+  const list = document.getElementById('stack-list');
+  if (!list) return;
 
-function switchTab(tab) {
-    // Update nav
-    document.querySelectorAll('.nav-tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tab);
+  list.innerHTML = stackData.map(([name, desc]) => `
+    <div class="stack-item">
+      <span class="stack-name">${name}</span>
+      <span class="stack-desc">${desc}</span>
+    </div>
+  `).join('');
+}
+
+function wireScrollMotion() {
+  const update = () => {
+    document.documentElement.style.setProperty('--scroll', String(window.scrollY));
+  };
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+}
+
+function wireRevealOnScroll() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
     });
+  }, { threshold: 0.16 });
 
-    if (tab === 'events') {
-        document.getElementById('events-section').style.display = 'block';
-        document.getElementById('my-events-section').style.display = 'none';
-        document.querySelector('.hero').style.display = 'block';
-        loadEvents();
-    } else {
-        document.getElementById('events-section').style.display = 'none';
-        document.getElementById('my-events-section').style.display = 'block';
-        document.querySelector('.hero').style.display = 'none';
-        loadMyEvents();
-    }
+  document.querySelectorAll('.panel').forEach((panel) => {
+    panel.style.opacity = '0';
+    panel.style.transform = 'translateY(18px)';
+    panel.style.transition = 'opacity 650ms ease, transform 650ms ease';
+    observer.observe(panel);
+  });
 }
 
-async function loadMyEvents() {
-    try {
-        const res = await fetch('/api/my-events');
-        const events = await res.json();
-        renderEvents(events, 'my-events-grid');
-
-        document.getElementById('my-events-empty').style.display = events.length === 0 ? 'block' : 'none';
-        document.getElementById('my-events-grid').style.display = events.length === 0 ? 'none' : 'grid';
-    } catch (err) {
-        console.error('Failed to load my events:', err);
-    }
+async function bootstrap() {
+  splitHeroTitle();
+  renderFeed();
+  renderStack();
+  wireScrollMotion();
+  wireRevealOnScroll();
+  await loadRepoStats();
 }
 
-function updateBadge() {
-    fetch('/api/my-events')
-        .then(res => res.json())
-        .then(events => {
-            const badge = document.getElementById('my-events-badge');
-            if (events.length > 0) {
-                badge.style.display = 'inline';
-                badge.textContent = events.length;
-            } else {
-                badge.style.display = 'none';
-            }
-        });
-}
-
-// ═══════════════════════════════
-//  MODAL
-// ═══════════════════════════════
-
-let currentEvent = null;
-
-function openModal(event) {
-    currentEvent = event;
-
-    document.getElementById('modal-emoji').textContent = event.emoji;
-    document.getElementById('modal-uni').textContent = event.university + ' · ' + event.type_label;
-    document.getElementById('modal-uni').style.color = event.color;
-    document.getElementById('modal-title').textContent = event.title;
-    document.getElementById('modal-date').textContent = event.date;
-    document.getElementById('modal-time').textContent = event.time;
-    document.getElementById('modal-location').textContent = event.location;
-    document.getElementById('modal-description').textContent = event.description;
-    document.getElementById('reg-event-id').value = event.id;
-
-    // Pre-fill form with known user data
-    if (currentUser) {
-        document.getElementById('reg-name').value = currentUser.name || '';
-        document.getElementById('reg-email').value = currentUser.email || '';
-    }
-
-    // Show form or success based on registration status
-    if (event.registered) {
-        document.getElementById('register-form').style.display = 'none';
-        document.getElementById('reg-success').style.display = 'block';
-        document.getElementById('reg-success').innerHTML = `
-            <div class="success-icon">✓</div>
-            <h3>Вы уже записаны</h3>
-            <p>Вы зарегистрированы на это мероприятие</p>
-            <div style="display:flex; gap:10px; justify-content:center">
-                <button class="btn btn-danger" onclick="cancelRegistration(${event.id})">Отменить запись</button>
-                <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
-            </div>
-        `;
-    } else {
-        document.getElementById('register-form').style.display = 'flex';
-        document.getElementById('reg-success').style.display = 'none';
-        document.getElementById('reg-submit').disabled = false;
-        document.getElementById('reg-submit').textContent = 'Записаться на мероприятие';
-    }
-
-    document.getElementById('modal-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal(e) {
-    if (e && e.target !== e.currentTarget) return;
-    document.getElementById('modal-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-
-    // Reset form after animation
-    setTimeout(() => {
-        document.getElementById('register-form').reset();
-        document.getElementById('register-form').style.display = 'flex';
-        document.getElementById('reg-success').style.display = 'none';
-    }, 300);
-}
-
-async function submitRegistration(e) {
-    e.preventDefault();
-
-    const btn = document.getElementById('reg-submit');
-    btn.disabled = true;
-    btn.textContent = 'Записываем...';
-
-    const data = {
-        event_id: parseInt(document.getElementById('reg-event-id').value),
-        name: document.getElementById('reg-name').value,
-        email: document.getElementById('reg-email').value,
-        role: document.getElementById('reg-role').value,
-    };
-
-    try {
-        const res = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-
-        const result = await res.json();
-
-        if (res.ok) {
-            document.getElementById('register-form').style.display = 'none';
-            document.getElementById('reg-success').style.display = 'block';
-            document.getElementById('reg-success').innerHTML = `
-                <div class="success-icon">✓</div>
-                <h3>Вы записаны!</h3>
-                <p>Информация о мероприятии отправлена на вашу почту</p>
-                <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
-            `;
-            updateBadge();
-            loadEvents();
-        } else {
-            btn.disabled = false;
-            btn.textContent = 'Записаться на мероприятие';
-            alert(result.error || 'Произошла ошибка');
-        }
-    } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Записаться на мероприятие';
-        alert('Ошибка сети. Попробуйте позже.');
-    }
-}
-
-async function cancelRegistration(eventId) {
-    try {
-        const res = await fetch('/api/cancel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event_id: eventId }),
-        });
-
-        if (res.ok) {
-            closeModal();
-            updateBadge();
-            loadEvents();
-
-            // Reload my-events if visible
-            if (document.getElementById('my-events-section').style.display !== 'none') {
-                loadMyEvents();
-            }
-        }
-    } catch (err) {
-        alert('Ошибка при отмене. Попробуйте позже.');
-    }
-}
-
-// ── Escape key to close modal ──
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        if (document.getElementById('modal-overlay').classList.contains('open')) {
-            closeModal();
-        }
-        if (chatOpen) {
-            toggleChat();
-        }
-    }
-});
-
-// ═══════════════════════════════
-//  AI CHAT
-// ═══════════════════════════════
-
-function toggleChat() {
-    chatOpen = !chatOpen;
-    document.getElementById('chat-panel').classList.toggle('open', chatOpen);
-    document.getElementById('ai-fab').classList.toggle('hidden', chatOpen);
-
-    if (chatOpen) {
-        document.getElementById('chat-input').focus();
-    }
-}
-
-async function sendChatMessage(e) {
-    e.preventDefault();
-
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-
-    // Add user message
-    addChatMessage(message, 'user');
-    input.value = '';
-
-    // Show typing indicator
-    const typing = addTypingIndicator();
-
-    try {
-        const res = await fetch('/api/ai-recommend', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message }),
-        });
-
-        const data = await res.json();
-        typing.remove();
-        addChatMessage(data.response, 'bot');
-    } catch (err) {
-        typing.remove();
-        addChatMessage('Не удалось получить ответ. Попробуйте позже.', 'bot');
-    }
-}
-
-function addChatMessage(text, sender) {
-    const container = document.getElementById('chat-messages');
-    const msg = document.createElement('div');
-    msg.className = `chat-msg chat-msg--${sender}`;
-
-    const avatar = sender === 'bot' ? '✦' : 'АП';
-    msg.innerHTML = `
-        <div class="chat-msg-avatar">${avatar}</div>
-        <div class="chat-msg-body">${escapeHtml(text)}</div>
-    `;
-
-    container.appendChild(msg);
-    container.scrollTop = container.scrollHeight;
-    return msg;
-}
-
-function addTypingIndicator() {
-    const container = document.getElementById('chat-messages');
-    const msg = document.createElement('div');
-    msg.className = 'chat-msg chat-msg--bot chat-msg--typing';
-    msg.innerHTML = `
-        <div class="chat-msg-avatar">✦</div>
-        <div class="chat-msg-body">
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-        </div>
-    `;
-    container.appendChild(msg);
-    container.scrollTop = container.scrollHeight;
-    return msg;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+document.addEventListener('DOMContentLoaded', bootstrap);
