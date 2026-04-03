@@ -2,83 +2,71 @@ const feedData = [
   {
     stamp: 'APR 01',
     index: '01',
-    title: 'boot sequence established',
-    summary: 'The repo opens with a Flask shell, a single rendered surface, and enough structure to ship a fast MVP without fighting the framework.',
-    chips: ['flask', 'templates', 'api surface'],
+    title: 'mvp scope locked',
+    summary: 'The repo starts with a focused Flask MVP: one rendered surface, one clear user path, and the right amount of structure to keep the bootcamp demo readable.',
+    chips: ['flask', 'mvp', 'single path'],
     raw: [
-      'app.py: Flask entrypoint + json endpoints',
-      'templates/index.html: main shell',
-      'static/style.css: visual system',
+      'app.py: registration flow + recommendation endpoint',
+      'mvp.md: product story and constraints',
+      'templates/index.html: main presentation shell',
     ],
   },
   {
     stamp: 'APR 03',
     index: '02',
-    title: 'operator theme locked in',
-    summary: 'Monospace typography, hard edges, grid lines, and a deliberate amount of negative space turn the landing page into a terminal-adjacent control panel.',
-    chips: ['mono type', 'high contrast', 'scanline'],
+    title: 'operator aesthetic applied',
+    summary: 'A high-contrast layout, raw monospace typography, and disciplined spacing turn the page into a bootcamp command surface instead of a generic landing screen.',
+    chips: ['mono type', 'grid', 'scanline'],
     raw: [
-      'font stack: IBM Plex Mono + Inter',
-      'overlay: grid + noise + scanline',
-      'surface: dark glass panels',
+      'IBM Plex Mono + Inter',
+      'glass panels with hard edges',
+      'grid, noise, and scanline overlays',
     ],
   },
   {
     stamp: 'APR 06',
     index: '03',
-    title: 'chronological feed introduced',
-    summary: 'Instead of a generic list, the content is framed as a mission log so the page reads like progress rather than inventory.',
-    chips: ['feed', 'timeline', 'status'],
+    title: 'feed becomes a timeline',
+    summary: 'The content is framed as a chronological build log, so the page reads like progress and iteration rather than a static checklist.',
+    chips: ['feed', 'timeline', 'stagger'],
     raw: [
-      'hero supports APRIL 2026 story framing',
-      'cards reveal raw metadata on hover',
-      'motion uses staggered entry',
+      'hero title splits into animated characters',
+      'each card exposes hidden metadata on hover',
+      'raw console mirrors the active entry',
     ],
   },
   {
-    stamp: 'APR 09',
+    stamp: 'APR 10',
     index: '04',
-    title: 'stack and telemetry panels',
-    summary: 'A side channel makes the repo feel inspectable: the stack is visible at a glance, while live repository stats keep the design grounded in actual project data.',
-    chips: ['github api', 'live stats', 'telemetry'],
+    title: 'data model and ai lane surfaced',
+    summary: 'The repo makes the underlying product honest: universities, events, registrations, and the recommendation helper are all visible in the interface.',
+    chips: ['events', 'ai assistant', 'registrations'],
     raw: [
-      'fetches stars, forks, issues, language',
-      'keeps repo state visible',
-      'direct github CTA stays on canvas',
-    ],
-  },
-  {
-    stamp: 'APR 12',
-    index: '05',
-    title: 'hover reveal channel opened',
-    summary: 'Every card exposes the underlying raw data when you hover it, so the UI reads polished on first pass and technical on second pass.',
-    chips: ['hover', 'raw data', 'inspection'],
-    raw: [
-      'feed cards include hidden source detail',
-      'raw console mirrors hovered item',
-      'motion stays subtle and reversible',
+      'EVENTS array powers the sample content',
+      'fallback recommender keeps the assistant usable',
+      'registered state is shown back to the user',
     ],
   },
   {
     stamp: 'APR 18',
-    index: '06',
-    title: 'deploy lane pointed at vercel',
-    summary: 'The last step is a clean delivery path: push the design branch, let Vercel build it, and hand back a live URL without ceremony.',
-    chips: ['design-v1', 'vercel', 'ship'],
+    index: '05',
+    title: 'delivery lane staged',
+    summary: 'The final pass is about shipping cleanly: push the redesign to design-v1, deploy it on Vercel, and keep the CTA pointed at the source.',
+    chips: ['design-v1', 'vercel', 'github'],
     raw: [
-      'target branch: design-v1',
-      'production host: vercel',
-      'cta routes to github repo',
+      'branch target: design-v1',
+      'production target: vercel',
+      'source of truth: mollyvita/bootcamp',
     ],
   },
 ];
 
 const stackData = [
-  ['backend', 'flask api + jinja shell'],
-  ['frontend', 'vanilla js renderer'],
-  ['visual layer', 'css grid, glass, noise'],
-  ['motion', 'character stagger + scroll react'],
-  ['delivery', 'github branch + vercel deploy'],
+  ['backend', 'flask routes + in-memory state'],
+  ['templating', 'jinja render shell'],
+  ['frontend', 'vanilla js interaction layer'],
+  ['visual system', 'css grid + overlays + glass'],
+  ['ai helper', 'yandexgpt lite + fallback rules'],
 ];
 
 async function loadRepoStats() {
@@ -87,12 +75,12 @@ async function loadRepoStats() {
     if (!response.ok) throw new Error(`github api ${response.status}`);
     const repo = await response.json();
 
-    setRepoValue('language', repo.language || 'n/a');
+    setRepoValue('language', repo.language || 'flask');
     setRepoValue('stars', formatNumber(repo.stargazers_count));
     setRepoValue('forks', formatNumber(repo.forks_count));
     setRepoValue('issues', formatNumber(repo.open_issues_count));
-  } catch (error) {
-    setRepoValue('language', 'css');
+  } catch {
+    setRepoValue('language', 'flask');
     setRepoValue('stars', '0');
     setRepoValue('forks', '0');
     setRepoValue('issues', '0');
@@ -129,7 +117,7 @@ function renderFeed() {
   if (!list) return;
 
   list.innerHTML = feedData.map((item, index) => `
-    <article class="feed-card" data-feed-card="${index}">
+    <article class="feed-card tilt-surface" data-feed-card="${index}">
       <div class="feed-top">
         <span class="feed-index">${item.index}</span>
         <span>${item.stamp}</span>
@@ -180,7 +168,7 @@ function renderStack() {
   if (!list) return;
 
   list.innerHTML = stackData.map(([name, desc]) => `
-    <div class="stack-item">
+    <div class="stack-item tilt-surface">
       <span class="stack-name">${name}</span>
       <span class="stack-desc">${desc}</span>
     </div>
@@ -189,10 +177,15 @@ function renderStack() {
 
 function wireScrollMotion() {
   const update = () => {
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
     document.documentElement.style.setProperty('--scroll', String(window.scrollY));
+    document.documentElement.style.setProperty('--scroll-progress', String(progress));
   };
+
   update();
   window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
 }
 
 function wireRevealOnScroll() {
@@ -213,12 +206,34 @@ function wireRevealOnScroll() {
   });
 }
 
+function wireTiltSurfaces() {
+  const surfaces = document.querySelectorAll('.tilt-surface');
+
+  surfaces.forEach((surface) => {
+    surface.addEventListener('pointermove', (event) => {
+      const rect = surface.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+      const rx = ((y - 0.5) * -6).toFixed(2);
+      const ry = ((x - 0.5) * 6).toFixed(2);
+      surface.style.setProperty('--rx', `${rx}deg`);
+      surface.style.setProperty('--ry', `${ry}deg`);
+    });
+
+    surface.addEventListener('pointerleave', () => {
+      surface.style.setProperty('--rx', '0deg');
+      surface.style.setProperty('--ry', '0deg');
+    });
+  });
+}
+
 async function bootstrap() {
   splitHeroTitle();
   renderFeed();
   renderStack();
   wireScrollMotion();
   wireRevealOnScroll();
+  wireTiltSurfaces();
   await loadRepoStats();
 }
 
