@@ -14,9 +14,10 @@
   <div class="grid-overlay"></div>
   <div class="scanline"></div>
   <div class="noise"></div>
+  <div class="scroll-progress"><span></span></div>
 
   <header class="topbar">
-    <a class="brand" href="https://github.com/mollyvita/bootcamp" target="_blank" rel="noreferrer">
+    <a class="brand tilt-surface" href="https://github.com/mollyvita/bootcamp" target="_blank" rel="noreferrer">
       <span class="brand-mark">◼</span>
       <span class="brand-copy">
         <span class="brand-title">mollyvita/bootcamp</span>
@@ -24,68 +25,76 @@
       </span>
     </a>
 
-    <div class="status-pill">
+    <div class="status-pill tilt-surface">
       <span class="status-dot"></span>
       <span>CENTRAL UNIVERSITY BOOTCAMP · ONLINE</span>
     </div>
 
-    <a class="topbar-link" href="#feed">mission log</a>
+    <a class="topbar-link tilt-surface" href="#feed">mission log</a>
   </header>
 
   <main class="page-shell">
-    <section class="hero panel">
+    <section class="hero panel tilt-surface">
       <div class="hero-copy">
-        <p class="eyebrow">APRIL 2026 / BUILD LOG</p>
+        <p class="eyebrow">frontend expert / operator edition</p>
         <h1 class="hero-title" data-split>BOOTCAMP / APRIL 2026</h1>
         <p class="hero-lead">
-          A high-contrast operator surface for the Central University bootcamp: raw monospace typography,
-          deliberate spacing, and a feed of the work that turns a simple demo into a launch-ready artifact.
+          A high-contrast control surface for the Central University bootcamp: a real Flask MVP,
+          a clear registration path, an AI recommendation lane, and a deployment story wrapped in
+          deliberate monospace spacing.
         </p>
+
+        <div class="hero-tags">
+          <span class="tag">flask mvp</span>
+          <span class="tag">chronological feed</span>
+          <span class="tag">hover reveal</span>
+          <span class="tag">vercel ready</span>
+        </div>
 
         <div class="hero-actions">
           <a class="button button-primary" href="https://github.com/mollyvita/bootcamp" target="_blank" rel="noreferrer">
             view on github
           </a>
-          <a class="button button-ghost" href="#stats">inspect stack</a>
+          <a class="button button-ghost" href="#feed">inspect log</a>
         </div>
 
         <div class="hero-metrics">
           <article class="metric-card">
             <span class="metric-value" data-metric="feed-count">—</span>
-            <span class="metric-label">log entries</span>
+            <span class="metric-label">mission entries</span>
           </article>
           <article class="metric-card">
-            <span class="metric-value" data-metric="stars">—</span>
-            <span class="metric-label">github stars</span>
+            <span class="metric-value" data-metric="modules">05</span>
+            <span class="metric-label">core modules</span>
           </article>
           <article class="metric-card">
             <span class="metric-value" data-metric="branch">design-v1</span>
             <span class="metric-label">target branch</span>
           </article>
           <article class="metric-card">
-            <span class="metric-value">Vercel</span>
-            <span class="metric-label">deploy target</span>
+            <span class="metric-value" data-metric="deploy">Vercel</span>
+            <span class="metric-label">ship lane</span>
           </article>
         </div>
       </div>
 
-      <aside class="hero-console">
+      <aside class="hero-console tilt-surface">
         <div class="console-header">
           <span class="console-label">/raw telemetry</span>
           <span class="console-state">live</span>
         </div>
         <div class="console-body">
           <div class="console-row"><span>repo</span><span>mollyvita/bootcamp</span></div>
-          <div class="console-row"><span>stack</span><span>flask · vanilla js · css</span></div>
-          <div class="console-row"><span>theme</span><span>operator / monospace</span></div>
-          <div class="console-row"><span>motion</span><span>stagger · hover · grid</span></div>
-          <div class="console-row"><span>status</span><span>ready for deployment</span></div>
+          <div class="console-row"><span>shell</span><span>flask + jinja</span></div>
+          <div class="console-row"><span>frontend</span><span>vanilla js + css</span></div>
+          <div class="console-row"><span>ai path</span><span>yandexgpt fallback</span></div>
+          <div class="console-row"><span>status</span><span>ready for branch build</span></div>
         </div>
       </aside>
     </section>
 
     <section class="content-grid">
-      <article class="panel feed-panel" id="feed">
+      <article class="panel feed-panel tilt-surface" id="feed">
         <div class="section-head">
           <p class="eyebrow">chronological feed</p>
           <h2>module execution log</h2>
@@ -94,7 +103,7 @@
       </article>
 
       <aside class="sidebar">
-        <article class="panel stats-panel" id="stats">
+        <article class="panel stats-panel tilt-surface" id="stats">
           <div class="section-head">
             <p class="eyebrow">stack overview</p>
             <h2>the tools under the hood</h2>
@@ -102,7 +111,7 @@
           <div class="stack-list" id="stack-list"></div>
         </article>
 
-        <article class="panel repo-panel">
+        <article class="panel repo-panel tilt-surface">
           <div class="section-head">
             <p class="eyebrow">repository stats</p>
             <h2>live telemetry</h2>
@@ -112,12 +121,12 @@
             <div class="repo-stat"><span class="repo-key">stars</span><span class="repo-value" data-repo="stars">—</span></div>
             <div class="repo-stat"><span class="repo-key">forks</span><span class="repo-value" data-repo="forks">—</span></div>
             <div class="repo-stat"><span class="repo-key">open issues</span><span class="repo-value" data-repo="issues">—</span></div>
-            <div class="repo-stat"><span class="repo-key">branch</span><span class="repo-value" data-repo="branch">main</span></div>
+            <div class="repo-stat"><span class="repo-key">branch</span><span class="repo-value" data-repo="branch">design-v1</span></div>
             <div class="repo-stat"><span class="repo-key">deploy</span><span class="repo-value" data-repo="deploy">vercel</span></div>
           </div>
         </article>
 
-        <article class="panel raw-panel">
+        <article class="panel raw-panel tilt-surface">
           <div class="section-head">
             <p class="eyebrow">hover channel</p>
             <h2>raw data behind the ui</h2>
@@ -129,10 +138,10 @@
       </aside>
     </section>
 
-    <section class="panel cta-panel">
+    <section class="panel cta-panel tilt-surface">
       <div>
         <p class="eyebrow">next action</p>
-        <h2>ship the visual pass, then keep iterating</h2>
+        <h2>ship the design branch, then keep iterating</h2>
       </div>
       <a class="button button-primary" href="https://github.com/mollyvita/bootcamp" target="_blank" rel="noreferrer">
         open github repo
