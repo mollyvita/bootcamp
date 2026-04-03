@@ -1,7 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import json
 import os
-import random
 
 app = Flask(__name__)
 
@@ -350,123 +349,71 @@ def my_events():
     return jsonify(result)
 
 
-def _fallback_recommend(message):
-    """Simple keyword-based recommendation when AI API is unavailable."""
-    msg = message.lower()
-    keywords = {
-        "open_day": ["абитуриент", "поступ", "открыт", "дверь", "приём", "приемн", "егэ", "вступительн"],
-        "club": ["клуб", "хобби", "интерес", "друзья", "внеучебн", "секц"],
-        "lecture": ["лекци", "наук", "узнать", "познакомит", "знани"],
-        "workshop": ["практик", "мастер", "хакатон", "руками", "навык", "научить", "программир", "код"],
-    }
-    uni_keywords = {
-        "МГУ": ["мгу", "московский государственный"],
-        "МФТИ": ["мфти", "физтех"],
-        "ВШЭ": ["вышка", "вшэ", "высшая школа"],
-        "МГТУ": ["бауман", "мгту"],
-        "ИТМО": ["итмо"],
-    }
-    topic_keywords = {
-        "tech": ["програм", "код", "it", "ит", "разработ", "робот", "ai", "ии", "искусствен", "data", "данн", "квант", "кибер", "хакатон", "веб"],
-        "creative": ["фото", "театр", "творч", "искусств", "музык", "рисов"],
-        "social": ["дебат", "выступлен", "команд", "общени"],
-        "science": ["наук", "физик", "математ", "космос", "медицин", "исследован"],
-    }
-
-    matched = list(EVENTS)
-
-    # Filter by university if mentioned
-    for uni, kws in uni_keywords.items():
-        if any(k in msg for k in kws):
-            matched = [e for e in matched if e["university"] == uni]
-            break
-
-    # Filter by event type if mentioned
-    for etype, kws in keywords.items():
-        if any(k in msg for k in kws):
-            matched = [e for e in matched if e["type"] == etype]
-            break
-
-    # Score by topic relevance
-    def topic_score(event):
-        desc = (event["title"] + " " + event["description"]).lower()
-        score = 0
-        for topic, kws in topic_keywords.items():
-            if any(k in msg for k in kws):
-                if any(k in desc for k in kws):
-                    score += 2
-        return score
-
-    matched.sort(key=topic_score, reverse=True)
-
-    if not matched:
-        matched = random.sample(EVENTS, min(3, len(EVENTS)))
-
-    picks = matched[:3]
-    lines = ["Вот что я могу порекомендовать:\n"]
-    for ev in picks:
-        lines.append(f"  {ev['emoji']} {ev['title']} — {ev['university']}, {ev['date']}.")
-        lines.append(f"     {ev['description'][:80]}...\n")
-    lines.append("Нажмите на карточку мероприятия, чтобы записаться!")
-    return "\n".join(lines)
-
-
 @app.route("/api/ai-recommend", methods=["POST"])
 def ai_recommend():
     data = request.json
     message = data.get("message", "")
 
-    folder_id = os.environ.get("YANDEX_FOLDER_ID", "")
-    api_key = os.environ.get("YANDEX_API_KEY", "")
+    try:
+        from yandex_ai_studio_sdk import AIStudio
 
-    # Try YandexGPT if credentials are available
-    if folder_id and api_key:
-        try:
-            from yandex_ai_studio_sdk import AIStudio
+        folder_id = os.environ.get("YANDEX_FOLDER_ID", "")
+        api_key = os.environ.get("YANDEX_API_KEY", "")
 
-            sdk = AIStudio(folder_id=folder_id, auth=api_key)
-            model = sdk.models.completions("yandexgpt-lite")
-            model.configure(temperature=0.3, max_tokens=2000)
+        if not folder_id or not api_key:
+            raise ValueError("API keys not configured")
 
-            events_context = json.dumps(
-                [
-                    {
-                        "id": e["id"],
-                        "title": e["title"],
-                        "university": e["university"],
-                        "type_label": e["type_label"],
-                        "audience_label": e["audience_label"],
-                        "date": e["date"],
-                        "description": e["description"],
-                    }
-                    for e in EVENTS
-                ],
-                ensure_ascii=False,
-            )
+        sdk = AIStudio(folder_id=folder_id, auth=api_key)
+        model = sdk.models.completions("yandexgpt-lite")
+        model.configure(temperature=0.3, max_tokens=2000)
 
-            system_prompt = (
-                "Ты — умный ассистент по университетским мероприятиям на платформе UniVent. "
-                "Помогай студентам и абитуриентам найти интересные мероприятия. "
-                "Рекомендуй конкретные мероприятия из списка, объясняй почему они подходят. "
-                "Отвечай кратко, дружелюбно, используй эмодзи.\n\n"
-                f"Доступные мероприятия:\n{events_context}"
-            )
+        events_context = json.dumps(
+            [
+                {
+                    "id": e["id"],
+                    "title": e["title"],
+                    "university": e["university"],
+                    "type_label": e["type_label"],
+                    "audience_label": e["audience_label"],
+                    "date": e["date"],
+                    "description": e["description"],
+                }
+                for e in EVENTS
+            ],
+            ensure_ascii=False,
+        )
 
-            messages = [
-                {"role": "system", "text": system_prompt},
-                {"role": "user", "text": message},
-            ]
+        system_prompt = (
+            "Ты — умный ассистент по университетским мероприятиям на платформе UniVent. "
+            "Помогай студентам и абитуриентам найти интересные мероприятия. "
+            "Рекомендуй конкретные мероприятия из списка, объясняй почему они подходят. "
+            "Отвечай кратко, дружелюбно, используй эмодзи.\n\n"
+            f"Доступные мероприятия:\n{events_context}"
+        )
 
-            operation = model.run_deferred(messages)
-            result = operation.wait()
+        messages = [
+            {"role": "system", "text": system_prompt},
+            {"role": "user", "text": message},
+        ]
 
-            return jsonify({"response": result.text})
+        operation = model.run_deferred(messages)
+        result = operation.wait()
 
-        except Exception:
-            pass  # Fall through to fallback
+        return jsonify({"response": result.text})
 
-    # Fallback: keyword-based recommendations
-    return jsonify({"response": _fallback_recommend(message)})
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "response": (
+                        "К сожалению, ИИ-ассистент сейчас недоступен "
+                        f"({type(e).__name__}). "
+                        "Попробуйте позже или просмотрите мероприятия в каталоге!"
+                    )
+                }
+            ),
+            200,
+        )
 
 
 if __name__ == "__main__":
