@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════
-//  UniVent — Frontend Application
+//  VuzTime — Frontend Application
 // ═══════════════════════════════════════
 
 let allEvents = [];

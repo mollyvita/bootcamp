@@ -1,6 +1,13 @@
+import traceback
 from flask import Flask, render_template, jsonify, request
 import json
 import os
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.environ.get("GOOGLE_API_KEY", "")
+client = genai.Client(api_key=api_key)
 
 app = Flask(__name__)
 
@@ -355,17 +362,8 @@ def ai_recommend():
     message = data.get("message", "")
 
     try:
-        from yandex_ai_studio_sdk import AIStudio
-
-        folder_id = os.environ.get("YANDEX_FOLDER_ID", "")
-        api_key = os.environ.get("YANDEX_API_KEY", "")
-
-        if not folder_id or not api_key:
-            raise ValueError("API keys not configured")
-
-        sdk = AIStudio(folder_id=folder_id, auth=api_key)
-        model = sdk.models.completions("yandexgpt-lite")
-        model.configure(temperature=0.3, max_tokens=2000)
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY not configured")
 
         events_context = json.dumps(
             [
@@ -383,25 +381,26 @@ def ai_recommend():
             ensure_ascii=False,
         )
 
-        system_prompt = (
-            "Ты — умный ассистент по университетским мероприятиям на платформе UniVent. "
+        system_instruction = (
+            "Ты — умный ассистент по университетским мероприятиям на платформе VuzTime. "
             "Помогай студентам и абитуриентам найти интересные мероприятия. "
             "Рекомендуй конкретные мероприятия из списка, объясняй почему они подходят. "
             "Отвечай кратко, дружелюбно, используй эмодзи.\n\n"
             f"Доступные мероприятия:\n{events_context}"
         )
 
-        messages = [
-            {"role": "system", "text": system_prompt},
-            {"role": "user", "text": message},
-        ]
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=message,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction
+            )
+        )
 
-        operation = model.run_deferred(messages)
-        result = operation.wait()
-
-        return jsonify({"response": result.text})
+        return jsonify({"response": response.text})
 
     except Exception as e:
+        traceback.print_exception(e)
         return (
             jsonify(
                 {
