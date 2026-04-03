@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniVent — Мероприятия университетов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800;900&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="#" class="logo" onclick="switchTab('events'); return false;">
+                <span class="logo-icon">◆</span>
+                <span class="logo-text">Uni<span class="logo-accent">Vent</span></span>
+            </a>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="events" onclick="switchTab('events')">
+                    <span class="tab-icon">▦</span>
+                    Мероприятия
+                </button>
+                <button class="nav-tab" data-tab="my-events" onclick="switchTab('my-events')">
+                    <span class="tab-icon">★</span>
+                    Мои записи
+                    <span class="badge" id="my-events-badge" style="display:none">0</span>
+                </button>
+            </div>
+            <div class="user-pill">
+                <div class="user-avatar">АП</div>
+                <span class="user-name">{{ user.name }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-orb hero-orb--1"></div>
+            <div class="hero-orb hero-orb--2"></div>
+            <div class="hero-orb hero-orb--3"></div>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Найди своё
+                <span class="hero-highlight">мероприятие</span>
+            </h1>
+            <p class="hero-subtitle">Дни открытых дверей, клубы, лекции и мастер-классы от лучших университетов страны</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">15</span>
+                    <span class="stat-label">мероприятий</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">университетов</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">категории</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section class="section" id="events-section">
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <select id="filter-university" class="filter-select" onchange="loadEvents()">
+                    <option value="">Все университеты</option>
+                    <option value="МГУ">МГУ</option>
+                    <option value="МФТИ">МФТИ</option>
+                    <option value="ВШЭ">ВШЭ</option>
+                    <option value="МГТУ">МГТУ им. Баумана</option>
+                    <option value="ИТМО">ИТМО</option>
+                </select>
+                <select id="filter-type" class="filter-select" onchange="loadEvents()">
+                    <option value="">Все типы</option>
+                    <option value="open_day">Дни открытых дверей</option>
+                    <option value="club">Клубы по интересам</option>
+                    <option value="lecture">Лекции</option>
+                    <option value="workshop">Мастер-классы</option>
+                </select>
+                <select id="filter-audience" class="filter-select" onchange="loadEvents()">
+                    <option value="">Для всех</option>
+                    <option value="student">Для студентов</option>
+                    <option value="applicant">Для абитуриентов</option>
+                </select>
+            </div>
+            <div class="filter-count" id="filter-count">Показано: 15</div>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="events-grid" id="events-grid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display:none">
+            <div class="empty-icon">🔍</div>
+            <h3>Ничего не найдено</h3>
+            <p>Попробуйте изменить параметры фильтров</p>
+        </div>
+    </section>
+
+    <!-- My Events Section -->
+    <section class="section" id="my-events-section" style="display:none">
+        <div class="section-header">
+            <h2 class="section-title">Мои записи</h2>
+            <p class="section-subtitle">Мероприятия, на которые вы зарегистрированы</p>
+        </div>
+        <div class="events-grid" id="my-events-grid"></div>
+        <div class="empty-state" id="my-events-empty" style="display:none">
+            <div class="empty-icon">📋</div>
+            <h3>Пока пусто</h3>
+            <p>Вы ещё не записались ни на одно мероприятие</p>
+            <button class="btn btn-primary" onclick="switchTab('events')">Смотреть мероприятия</button>
+        </div>
+    </section>
+
+    <!-- Registration Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <span class="modal-emoji" id="modal-emoji"></span>
+                <div>
+                    <div class="modal-uni" id="modal-uni"></div>
+                    <h2 class="modal-title" id="modal-title"></h2>
+                </div>
+            </div>
+            <div class="modal-details">
+                <div class="modal-detail">
+                    <span class="detail-icon">📅</span>
+                    <span id="modal-date"></span>
+                </div>
+                <div class="modal-detail">
+                    <span class="detail-icon">🕐</span>
+                    <span id="modal-time"></span>
+                </div>
+                <div class="modal-detail">
+                    <span class="detail-icon">📍</span>
+                    <span id="modal-location"></span>
+                </div>
+            </div>
+            <p class="modal-description" id="modal-description"></p>
+
+            <!-- Registration Form -->
+            <form class="reg-form" id="register-form" onsubmit="submitRegistration(event)">
+                <input type="hidden" id="reg-event-id">
+                <div class="form-group">
+                    <label for="reg-name">ФИО</label>
+                    <input type="text" id="reg-name" placeholder="Иванов Иван Иванович" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Электронная почта</label>
+                    <input type="email" id="reg-email" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Кем вы являетесь</label>
+                    <select id="reg-role" required>
+                        <option value="" disabled selected>Выберите</option>
+                        <option value="student">Студент</option>
+                        <option value="applicant">Абитуриент</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="reg-submit">
+                    Записаться на мероприятие
+                </button>
+            </form>
+
+            <!-- Success State -->
+            <div class="reg-success" id="reg-success" style="display:none">
+                <div class="success-icon">✓</div>
+                <h3>Вы записаны!</h3>
+                <p>Информация о мероприятии отправлена на вашу почту</p>
+                <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat FAB -->
+    <button class="ai-fab" id="ai-fab" onclick="toggleChat()">
+        <span class="ai-fab-icon">✦</span>
+        <span class="ai-fab-label">AI</span>
+    </button>
+
+    <!-- AI Chat Panel -->
+    <div class="chat-panel" id="chat-panel">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <span class="chat-header-dot"></span>
+                <h3>ИИ-ассистент</h3>
+            </div>
+            <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg chat-msg--bot">
+                <div class="chat-msg-avatar">✦</div>
+                <div class="chat-msg-body">Привет! 👋 Я помогу подобрать мероприятие по вашим интересам. Расскажите, что вам интересно?</div>
+            </div>
+        </div>
+        <form class="chat-form" id="chat-form" onsubmit="sendChatMessage(event)">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Напишите сообщение..." autocomplete="off">
+            <button type="submit" class="chat-send">→</button>
+        </form>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
