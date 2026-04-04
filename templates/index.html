@@ -8,121 +8,215 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800;900&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-inner">
-            <a href="#" class="logo" onclick="switchTab('events'); return false;">
-                <span class="logo-icon">◆</span>
+
+    <!-- ═══ Top Navigation ═══ -->
+    <nav class="topbar">
+        <div class="topbar-inner">
+            <a href="#" class="logo" onclick="goHome(); return false;">
+                <img src="/static/logo.jpeg" alt="VuzTime" class="logo-img">
                 <span class="logo-text">Vuz<span class="logo-accent">Time</span></span>
             </a>
-            <div class="nav-tabs">
-                <button class="nav-tab active" data-tab="events" onclick="switchTab('events')">
-                    <span class="tab-icon">▦</span>
-                    Мероприятия
+            <div class="topbar-right">
+                <div class="lang-selector" id="lang-selector">
+                    <button class="lang-btn" onclick="toggleLangMenu()">
+                        <span id="lang-current">RU</span>
+                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </button>
+                    <div class="lang-dropdown" id="lang-dropdown">
+                        <button class="lang-option active" data-lang="ru" onclick="setLanguage('ru')">RU</button>
+                        <button class="lang-option" data-lang="en" onclick="setLanguage('en')">EN</button>
+                        <button class="lang-option" data-lang="es" onclick="setLanguage('es')">ES</button>
+                        <button class="lang-option" data-lang="cn" onclick="setLanguage('cn')">CN</button>
+                    </div>
+                </div>
+                <button class="profile-trigger" onclick="toggleProfile()">
+                    <div class="avatar-sm" id="user-avatar">АП</div>
                 </button>
-                <button class="nav-tab" data-tab="my-events" onclick="switchTab('my-events')">
-                    <span class="tab-icon">★</span>
-                    Мои записи
-                    <span class="badge" id="my-events-badge" style="display:none">0</span>
-                </button>
-            </div>
-            <div class="user-pill">
-                <div class="user-avatar">АП</div>
-                <span class="user-name">{{ user.name }}</span>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-bg">
-            <div class="hero-orb hero-orb--1"></div>
-            <div class="hero-orb hero-orb--2"></div>
-            <div class="hero-orb hero-orb--3"></div>
-        </div>
-        <div class="hero-content">
-            <h1 class="hero-title">
-                Найди своё
-                <span class="hero-highlight">мероприятие</span>
-            </h1>
-            <p class="hero-subtitle">Дни открытых дверей, клубы, лекции и мастер-классы от лучших университетов страны</p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number">15</span>
-                    <span class="stat-label">мероприятий</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">5</span>
-                    <span class="stat-label">университетов</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number">4</span>
-                    <span class="stat-label">категории</span>
+    <!-- ═══ Main View (Home) ═══ -->
+    <main class="main-view" id="main-view">
+
+        <!-- Hero with stats -->
+        <section class="hero">
+            <div class="hero-bg">
+                <div class="hero-orb hero-orb--1"></div>
+                <div class="hero-orb hero-orb--2"></div>
+            </div>
+            <div class="hero-content">
+                <h1 class="hero-title" data-i18n="heroTitle">
+                    Найди своё <span class="hero-highlight" data-i18n="heroHighlight">мероприятие</span>
+                </h1>
+                <p class="hero-subtitle" data-i18n="heroSubtitle">Мероприятия от лучших университетов мира</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label" data-i18n="events">мероприятий</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number">15</span>
+                        <span class="stat-label" data-i18n="universities">университетов</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label" data-i18n="countries">стран</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Events Section -->
-    <section class="section" id="events-section">
-        <!-- Filters -->
-        <div class="filters">
-            <div class="filter-group">
-                <select id="filter-university" class="filter-select" onchange="loadEvents()">
-                    <option value="">Все университеты</option>
-                    <option value="МГУ">МГУ</option>
-                    <option value="МФТИ">МФТИ</option>
-                    <option value="ВШЭ">ВШЭ</option>
-                    <option value="МГТУ">МГТУ им. Баумана</option>
-                    <option value="ИТМО">ИТМО</option>
-                </select>
-                <select id="filter-type" class="filter-select" onchange="loadEvents()">
-                    <option value="">Все типы</option>
-                    <option value="open_day">Дни открытых дверей</option>
-                    <option value="club">Клубы по интересам</option>
-                    <option value="lecture">Лекции</option>
-                    <option value="workshop">Мастер-классы</option>
-                </select>
-                <select id="filter-audience" class="filter-select" onchange="loadEvents()">
-                    <option value="">Для всех</option>
-                    <option value="student">Для студентов</option>
-                    <option value="applicant">Для абитуриентов</option>
-                </select>
+        <!-- AI Assistant (compact inline) -->
+        <section class="ai-section" id="ai-section">
+            <div class="ai-intro">
+                <div class="ai-icon-wrap">
+                    <span class="ai-icon-glyph">✦</span>
+                </div>
+                <p class="ai-greeting" data-i18n="aiGreeting">Спросите меня о мероприятиях — я подберу лучшее для вас</p>
             </div>
-            <div class="filter-count" id="filter-count">Показано: 15</div>
-        </div>
+            <form class="ai-input-bar" id="ai-form" onsubmit="sendFromHome(event)">
+                <input type="text" class="ai-input" id="ai-input" data-i18n-placeholder="aiPlaceholder" placeholder="Какие мероприятия вам интересны?" autocomplete="off">
+                <button type="submit" class="ai-send">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </form>
+            <div class="ai-chips">
+                <button class="ai-chip" onclick="quickAsk(this.textContent)" data-i18n="chipOpenDays">Дни открытых дверей</button>
+                <button class="ai-chip" onclick="quickAsk(this.textContent)" data-i18n="chipIT">IT и технологии</button>
+                <button class="ai-chip" onclick="quickAsk(this.textContent)" data-i18n="chipLectures">Лекции и наука</button>
+                <button class="ai-chip" onclick="quickAsk(this.textContent)" data-i18n="chipInternational">Зарубежные вузы</button>
+            </div>
+        </section>
 
-        <!-- Events Grid -->
-        <div class="events-grid" id="events-grid"></div>
+        <!-- Events Section -->
+        <section class="events-section" id="events-section">
+            <div class="filters">
+                <div class="filter-group">
+                    <select id="filter-country" class="filter-select" onchange="loadEvents()">
+                        <option value="" data-i18n="allCountries">Все страны</option>
+                        <option value="RU">🇷🇺 Россия</option>
+                        <option value="US">🇺🇸 США</option>
+                        <option value="UK">🇬🇧 Великобритания</option>
+                        <option value="CN">🇨🇳 Китай</option>
+                        <option value="JP">🇯🇵 Япония</option>
+                        <option value="DE">🇩🇪 Германия</option>
+                        <option value="FR">🇫🇷 Франция</option>
+                        <option value="CH">🇨🇭 Швейцария</option>
+                        <option value="KR">🇰🇷 Южная Корея</option>
+                    </select>
+                    <select id="filter-university" class="filter-select" onchange="loadEvents()">
+                        <option value="" data-i18n="allUniversities">Все университеты</option>
+                    </select>
+                    <select id="filter-type" class="filter-select" onchange="loadEvents()">
+                        <option value="" data-i18n="allTypes">Все типы</option>
+                        <option value="open_day" data-i18n="typeOpenDay">Дни открытых дверей</option>
+                        <option value="club" data-i18n="typeClub">Клубы по интересам</option>
+                        <option value="lecture" data-i18n="typeLecture">Лекции</option>
+                        <option value="workshop" data-i18n="typeWorkshop">Мастер-классы</option>
+                    </select>
+                    <select id="filter-audience" class="filter-select" onchange="loadEvents()">
+                        <option value="" data-i18n="forAll">Для всех</option>
+                        <option value="student" data-i18n="forStudents">Для студентов</option>
+                        <option value="applicant" data-i18n="forApplicants">Для абитуриентов</option>
+                    </select>
+                </div>
+                <div class="filter-count" id="filter-count">Показано: 25</div>
+            </div>
+            <div class="events-grid" id="events-grid"></div>
+            <div class="empty-state" id="empty-state" style="display:none">
+                <div class="empty-icon">🔍</div>
+                <h3 data-i18n="nothingFound">Ничего не найдено</h3>
+                <p data-i18n="changeFilters">Попробуйте изменить параметры фильтров</p>
+            </div>
+        </section>
+    </main>
 
-        <!-- Empty State -->
-        <div class="empty-state" id="empty-state" style="display:none">
-            <div class="empty-icon">🔍</div>
-            <h3>Ничего не найдено</h3>
-            <p>Попробуйте изменить параметры фильтров</p>
+    <!-- ═══ Fullscreen AI Chat ═══ -->
+    <div class="chat-fullscreen" id="chat-fullscreen">
+        <div class="chat-topbar">
+            <button class="chat-back" onclick="closeChat()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span data-i18n="back">Назад</span>
+            </button>
+            <div class="chat-topbar-title">
+                <span class="chat-dot"></span>
+                <h3 data-i18n="aiAssistant">ИИ-ассистент</h3>
+            </div>
+            <div style="width:80px"></div>
         </div>
-    </section>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg chat-msg--bot">
+                <div class="chat-msg-avatar">✦</div>
+                <div class="chat-msg-body" data-i18n="aiWelcome">Привет! 👋 Я помогу подобрать мероприятие по вашим интересам. Расскажите, что вам интересно?</div>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <form class="chat-form" id="chat-form" onsubmit="sendChatMessage(event)">
+                <input type="text" id="chat-input" class="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Напишите сообщение..." autocomplete="off">
+                <button type="submit" class="chat-send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </form>
+        </div>
+    </div>
 
-    <!-- My Events Section -->
-    <section class="section" id="my-events-section" style="display:none">
-        <div class="section-header">
-            <h2 class="section-title">Мои записи</h2>
-            <p class="section-subtitle">Мероприятия, на которые вы зарегистрированы</p>
-        </div>
-        <div class="events-grid" id="my-events-grid"></div>
-        <div class="empty-state" id="my-events-empty" style="display:none">
-            <div class="empty-icon">📋</div>
-            <h3>Пока пусто</h3>
-            <p>Вы ещё не записались ни на одно мероприятие</p>
-            <button class="btn btn-primary" onclick="switchTab('events')">Смотреть мероприятия</button>
-        </div>
-    </section>
+    <!-- ═══ Profile Panel (Slide-out) ═══ -->
+    <div class="profile-overlay" id="profile-overlay" onclick="closeProfileOverlay(event)">
+        <div class="profile-panel" onclick="event.stopPropagation()">
+            <div class="profile-header">
+                <h2 data-i18n="profile">Профиль</h2>
+                <button class="profile-close" onclick="toggleProfile()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+            <div class="profile-user-info">
+                <div class="avatar-lg" id="profile-avatar">АП</div>
+                <div class="profile-user-name" id="profile-name">{{ user.name }}</div>
+                <div class="profile-user-email" id="profile-email">{{ user.email }}</div>
+            </div>
+            <div class="profile-tabs">
+                <button class="profile-tab active" data-ptab="my-events" onclick="switchProfileTab('my-events')" data-i18n="myEvents">Мои записи</button>
+                <button class="profile-tab" data-ptab="settings" onclick="switchProfileTab('settings')" data-i18n="settings">Настройки</button>
+            </div>
 
-    <!-- Registration Modal -->
+            <!-- My Events -->
+            <div class="profile-content" id="ptab-my-events">
+                <div class="profile-events-list" id="profile-events-list"></div>
+                <div class="profile-empty" id="profile-events-empty" style="display:none">
+                    <p data-i18n="noEventsDesc">Вы ещё не записались ни на одно мероприятие</p>
+                    <button class="btn btn-primary btn-sm" onclick="toggleProfile(); goHome();" data-i18n="viewEvents">Смотреть мероприятия</button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="profile-content" id="ptab-settings" style="display:none">
+                <form class="settings-form" id="settings-form" onsubmit="saveSettings(event)">
+                    <div class="form-group">
+                        <label data-i18n="fullName">ФИО</label>
+                        <input type="text" id="settings-name" value="{{ user.name }}">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="emailLabel">Электронная почта</label>
+                        <input type="email" id="settings-email" value="{{ user.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="phoneLabel">Телефон</label>
+                        <input type="tel" id="settings-phone" value="{{ user.phone }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" data-i18n="save">Сохранить</button>
+                    <div class="settings-saved" id="settings-saved" style="display:none" data-i18n="savedSuccess">Сохранено ✓</div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Registration Modal ═══ -->
     <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
         <div class="modal" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -134,80 +228,38 @@
                 </div>
             </div>
             <div class="modal-details">
-                <div class="modal-detail">
-                    <span class="detail-icon">📅</span>
-                    <span id="modal-date"></span>
-                </div>
-                <div class="modal-detail">
-                    <span class="detail-icon">🕐</span>
-                    <span id="modal-time"></span>
-                </div>
-                <div class="modal-detail">
-                    <span class="detail-icon">📍</span>
-                    <span id="modal-location"></span>
-                </div>
+                <div class="modal-detail"><span class="detail-icon">📅</span><span id="modal-date"></span></div>
+                <div class="modal-detail"><span class="detail-icon">🕐</span><span id="modal-time"></span></div>
+                <div class="modal-detail"><span class="detail-icon">📍</span><span id="modal-location"></span></div>
             </div>
             <p class="modal-description" id="modal-description"></p>
-
-            <!-- Registration Form -->
             <form class="reg-form" id="register-form" onsubmit="submitRegistration(event)">
                 <input type="hidden" id="reg-event-id">
                 <div class="form-group">
-                    <label for="reg-name">ФИО</label>
+                    <label data-i18n="fullName">ФИО</label>
                     <input type="text" id="reg-name" placeholder="Иванов Иван Иванович" required>
                 </div>
                 <div class="form-group">
-                    <label for="reg-email">Электронная почта</label>
+                    <label data-i18n="emailLabel">Электронная почта</label>
                     <input type="email" id="reg-email" placeholder="email@example.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="reg-role">Кем вы являетесь</label>
+                    <label data-i18n="role">Кем вы являетесь</label>
                     <select id="reg-role" required>
-                        <option value="" disabled selected>Выберите</option>
-                        <option value="student">Студент</option>
-                        <option value="applicant">Абитуриент</option>
+                        <option value="" disabled selected data-i18n="select">Выберите</option>
+                        <option value="student" data-i18n="student">Студент</option>
+                        <option value="applicant" data-i18n="applicant">Абитуриент</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full" id="reg-submit">
-                    Записаться на мероприятие
-                </button>
+                <button type="submit" class="btn btn-primary btn-full" id="reg-submit" data-i18n="registerForEvent">Записаться на мероприятие</button>
             </form>
-
-            <!-- Success State -->
             <div class="reg-success" id="reg-success" style="display:none">
                 <div class="success-icon">✓</div>
-                <h3>Вы записаны!</h3>
-                <p>Информация о мероприятии отправлена на вашу почту</p>
-                <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
+                <h3 data-i18n="youRegistered">Вы записаны!</h3>
+                <p data-i18n="infoSent">Информация о мероприятии отправлена на вашу почту</p>
+                <button class="btn btn-secondary" onclick="closeModal()" data-i18n="close">Закрыть</button>
             </div>
         </div>
-    </div>
-
-    <!-- AI Chat FAB -->
-    <button class="ai-fab" id="ai-fab" onclick="toggleChat()">
-        <span class="ai-fab-icon">✦</span>
-        <span class="ai-fab-label">AI</span>
-    </button>
-
-    <!-- AI Chat Panel -->
-    <div class="chat-panel" id="chat-panel">
-        <div class="chat-header">
-            <div class="chat-header-info">
-                <span class="chat-header-dot"></span>
-                <h3>ИИ-ассистент</h3>
-            </div>
-            <button class="chat-close" onclick="toggleChat()">✕</button>
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <div class="chat-msg chat-msg--bot">
-                <div class="chat-msg-avatar">✦</div>
-                <div class="chat-msg-body">Привет! 👋 Я помогу подобрать мероприятие по вашим интересам. Расскажите, что вам интересно?</div>
-            </div>
-        </div>
-        <form class="chat-form" id="chat-form" onsubmit="sendChatMessage(event)">
-            <input type="text" id="chat-input" class="chat-input" placeholder="Напишите сообщение..." autocomplete="off">
-            <button type="submit" class="chat-send">→</button>
-        </form>
     </div>
 
     <script src="/static/app.js"></script>
